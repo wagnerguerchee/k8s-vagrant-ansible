@@ -1,0 +1,14 @@
+- hosts: workers
+  #gather_facts: yes
+  tasks:
+   - name: Copy join command for worker nodes.
+     become: yes
+     copy:
+       dest: /opt/kubejoin.sh
+       src: ./join/kubejoin.sh
+       mode: '0700'
+
+   - name: Run command on remote
+     become: yes
+     shell: /opt/kubejoin.sh
+  

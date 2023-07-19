@@ -1,0 +1,73 @@
+- hosts: masters
+  become: yes
+  tasks:
+    - name: Destroy cluster before starting again 
+      command: kubeadm reset -f  
+    
+    - name: initialize the cluster
+      command: kubeadm init --apiserver-advertise-address 192.168.56.13 --pod-network-cidr=10.244.0.0/16
+      register: kubeadm_init_output
+
+    #- name: Get the token for joining the worker nodes
+    #  become: yes
+    #  become_user: kube
+    #  shell: kubeadm token create  --print-join-command
+    #  register: kubernetes_join_command_output
+
+    - name: Create file with output
+      copy: 
+        content: "{{ kubeadm_init_output.stdout }}"
+        dest: /root/kubeadminit
+
+    - name: Prepare kebejoin script     
+      shell: tail -2 /root/kubeadminit > /root/kubejoin.sh
+
+    - name: Get kubejoin
+      fetch:
+        dest: ./join
+        src: /root/kubejoin.sh
+
+    - name: Organize files
+      shell: |  
+        cp join/{{ inventory_hostname }}/root/kubejoin.sh join/
+        rm -fr join/{{ inventory_hostname }}
+      delegate_to: localhost
+      become: no          
+
+    - name: create .kube directory
+      become: yes
+      become_user: kube
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copies admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/kube/.kube/config
+        remote_src: yes
+        owner: kube
+        
+    - name: install Pod network
+      become: yes
+      become_user: kube
+      shell: kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+      args:
+        chdir: $HOME
+
+    
+    
+    #- debug: msg ="{{ kubernetes_join_command.stdout }}"
+    #- name: Copy join command to local file
+    #  become: yes
+    #  become_user: kube
+    #  local_action: copy content="{{ kubernetes_join_command.stdout_lines[0] }}" dest="/home/wagner/agrotis/vagrant/k8s-cluster/ansible/kubernetes_join_command" 
+
+
+
+    #- name: Copy join command to local file.
+    #  become: yes
+    #  ansible.builtin.copy: 
+    #    content: "{{ kubernetes_join_command.stdout_lines[0] }}"
+    #    dest: "/tmp/kubernetes_join_command"

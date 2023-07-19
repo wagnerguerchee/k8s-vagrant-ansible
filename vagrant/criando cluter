@@ -1,0 +1,45 @@
+## apos subir a maquina com o devido ip 192.168.56.13
+
+## acessar como root
+sudo su
+
+## rodar o seguinte comando  para criar o cluster lembrando que ja temos os 
+kubectl kubeadm e kubelet instalado
+
+kubeadm init --apiserver-advertise-address 192.168.56.13 --pod-network-cidr=10.244.0.0/16
+
+## depois saia do ussuario root
+mkdir -p $HOME/.kube 
+
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config 
+
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+## e um comando para verificar se o node esta de pé 
+kubectl get nodes
+
+#criando uma interface de rede entre os nodes
+#siet https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+##após isso conectar nos slaves e colar o seguinte comando 
+## FICAR ATENTO PARA NÃO COPIAR O PONTO . ENTRE UMA LINHA E OUTRA 
+
+kubeadm join 192.168.56.13:6443 --token aaduiz.njc7r9x8s9bbfksg --discovery-token-ca-cert-hash sha256:6b3a44261815dccef1578ff00254f2961ab1d9d55618cae1c4e76fb4aaf09be7
+
+##apartir disso , voltar para o node master e verifcar ambos nodes ready com 
+kubectl get nodes
+
+## agora vamnos criar um deploymente com 5 replicas  e expor para acessarmos via navegador ou curl
+kubectl create deployment webserver --image=nginx --port 80 --replicas=5
+## expondo a aplicação 
+kubectl expose deployment webserver --port 80 --type=NodePort
+
+### agora para acessa-lo temos que dar um describe no service para ver a porta a qual o serviço foi associado
+kubectl describe services webserver
+
+## podemos acessar com o ip dos worker e com a porta que pegamos atraves do describe 
+
+
+
