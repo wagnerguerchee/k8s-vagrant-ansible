@@ -1,5 +1,7 @@
 # k8s-cluster
-
+<h1>
+  <img src= "./img/labk8s.png"/>
+</h1>
 CREATE CLUSTER K8S WITH ONE MASTER AND 2 WORKER
 
 * 192.168.56.13 master
@@ -10,7 +12,8 @@ REFERENCIA [here](https://baykara.medium.com/setup-own-kubernetes-cluster-via-vi
 
 Necessaŕio ter instalado
 -----------------------------------------------------------
-vagrant
+vagrant [here](https://computingforgeeks.com/using-vagrant-with-virtualbox-kvm-on-rocky/)
+-------------------------------------------------------------------------------------------
 virtualbox
 -------------------------------------------------------------
 
